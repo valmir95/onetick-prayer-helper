@@ -22,24 +22,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.example.javaexample;
+package com.vame.onetickprayerhelper;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.Keybind;
+
+import java.awt.event.KeyEvent;
 
 @ConfigGroup("JavaExampleConfig")
 
 public interface OneTickPrayerHelperConfig extends Config
 {
 	@ConfigItem(
-		keyName = "example",
-		name = "Example config item",
-		description = "Example",
+		keyName = "hotKey",
+		name = "Set hot key",
+		description = "Set the key to toggle on or off the flicker",
 		position = 0
 	)
-	default boolean example()
+	default Keybind hotKey()
 	{
-		return true;
+		return new Keybind(KeyEvent.VK_F2, 0);
 	}
 }

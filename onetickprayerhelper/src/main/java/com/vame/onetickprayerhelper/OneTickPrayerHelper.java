@@ -1,10 +1,11 @@
-package com.example.javaexample;
+package com.vame.onetickprayerhelper;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
 import net.runelite.api.events.GameTick;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -12,6 +13,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
+import net.runelite.api.Prayer;
 import org.pf4j.Extension;
 
 import java.awt.*;
@@ -34,6 +36,9 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	@Inject
 	private OneTickPrayerHelperConfig config;
 
+	@Inject
+	private Client client;
+
 	// Provides our config
 	@Provides
 	OneTickPrayerHelperConfig provideConfig(ConfigManager configManager)
@@ -43,6 +48,8 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 
 	@Getter
 	private boolean isClicking;
+	@Getter
+	private boolean lastClick;
 
 	@Inject
 	private KeyManager keyManager;
@@ -69,15 +76,24 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	@Subscribe
 	public void onGameTick(GameTick event){
 		if(this.isClicking){
-			Random random = new Random();
 			int firstClickDelay = this.randInt(6, 41);
 			int secondClickDelay = this.randInt(72, 153);
 
-			this.schedule(firstClickDelay);
-			this.schedule(secondClickDelay);
-			//Robot r = new Robot();
-			//r.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
-			//r.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
+			Prayer activePrayer = this.getActivePrayer();
+
+			if(activePrayer == null){
+				int preClickDelay = this.randInt(6, 23);
+				this.executor.schedule(this::click, preClickDelay, TimeUnit.MILLISECONDS);
+				return;
+			}
+
+			this.executor.schedule(this::click, firstClickDelay, TimeUnit.MILLISECONDS);
+			this.executor.schedule(this::click, secondClickDelay, TimeUnit.MILLISECONDS);
+			this.lastClick = true;
+		}
+		else if(this.lastClick){
+			this.schedule(50);
+			this.lastClick = false;
 		}
 	}
 
@@ -90,7 +106,6 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 			Robot r = new Robot();
 			r.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
 			r.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
-			System.out.println("helloo");
 		}catch (Exception e){
 			e.printStackTrace();
 		}
@@ -99,7 +114,7 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_F2){
+		if(e.getKeyCode() == this.config.hotKey().getKeyCode()){
 			this.isClicking = !this.isClicking;
 		}
 	}
@@ -107,6 +122,17 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	@Override
 	public void keyReleased(KeyEvent e) {
 
+	}
+
+	public Prayer getActivePrayer(){
+		for (Prayer prayer : Prayer.values())
+		{
+			if (client.isPrayerActive(prayer))
+			{
+				return prayer;
+			}
+		}
+		return null;
 	}
 
 	public int randInt(int min, int max) {
