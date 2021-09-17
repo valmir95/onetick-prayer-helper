@@ -30,7 +30,7 @@ import net.runelite.client.config.ConfigItem;
 
 @ConfigGroup("JavaExampleConfig")
 
-public interface JavaExampleConfig extends Config
+public interface OneTickPrayerHelperConfig extends Config
 {
 	@ConfigItem(
 		keyName = "example",

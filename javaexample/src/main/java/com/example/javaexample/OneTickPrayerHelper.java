@@ -1,0 +1,129 @@
+package com.example.javaexample;
+
+import com.google.inject.Provides;
+import javax.inject.Inject;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.events.GameTick;
+import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.input.KeyListener;
+import net.runelite.client.input.KeyManager;
+import org.pf4j.Extension;
+
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+@Extension
+@PluginDescriptor(
+	name = "One Tick Prayer",
+	description = "Helps with one tick prayer."
+)
+@Slf4j
+public class OneTickPrayerHelper extends Plugin implements KeyListener
+{
+	// Injects our config
+	@Inject
+	private OneTickPrayerHelperConfig config;
+
+	// Provides our config
+	@Provides
+	OneTickPrayerHelperConfig provideConfig(ConfigManager configManager)
+	{
+		return configManager.getConfig(OneTickPrayerHelperConfig.class);
+	}
+
+	@Getter
+	private boolean isClicking;
+
+	@Inject
+	private KeyManager keyManager;
+
+	private ScheduledExecutorService executor;
+
+	@Override
+	protected void startUp() throws Exception
+	{
+		keyManager.registerKeyListener(this);
+		executor = Executors.newSingleThreadScheduledExecutor();
+	}
+
+	@Override
+	protected void shutDown() throws Exception
+	{
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick event){
+		if(this.isClicking){
+			Random random = new Random();
+			int firstClickDelay = this.randInt(6, 41);
+			int secondClickDelay = this.randInt(72, 153);
+
+			this.schedule(firstClickDelay);
+			this.schedule(secondClickDelay);
+			//Robot r = new Robot();
+			//r.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
+			//r.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
+		}
+	}
+
+	public void schedule(int delay){
+		this.executor.schedule(this::click, delay, TimeUnit.MILLISECONDS);
+	}
+
+	private void click(){
+		try{
+			Robot r = new Robot();
+			r.mousePress(MouseEvent.BUTTON1_DOWN_MASK);
+			r.mouseRelease(MouseEvent.BUTTON1_DOWN_MASK);
+			System.out.println("helloo");
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if(e.getKeyCode() == KeyEvent.VK_F2){
+			this.isClicking = !this.isClicking;
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+
+	}
+
+	public int randInt(int min, int max) {
+
+		// NOTE: This will (intentionally) not run as written so that folks
+		// copy-pasting have to think about how to initialize their
+		// Random instance.  Initialization of the Random instance is outside
+		// the main scope of the question, but some decent options are to have
+		// a field that is initialized once and then re-used as needed or to
+		// use ThreadLocalRandom (if using at least Java 1.7).
+		//
+		// In particular, do NOT do 'Random rand = new Random()' here or you
+		// will get not very good / not very random results.
+		Random rand = new Random();
+
+		// nextInt is normally exclusive of the top value,
+		// so add 1 to make it inclusive
+		return rand.nextInt((max - min) + 1) + min;
+	}
+}
