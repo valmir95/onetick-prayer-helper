@@ -1,3 +1,2 @@
-# One tick prayer helper
-
-This is a OpenOSRS plugin which helps with your prayer flicking. It uses random intervals within one game-tick. Simply hover your mouse over the quick-prayer orb, and press the hotkey of your choosing to toggle the plugin on/off.
+# External plugin repository
+  Started off as a single plugin. Now a plugin repository for all my custom plugins. 
