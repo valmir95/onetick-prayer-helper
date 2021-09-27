@@ -35,6 +35,7 @@ import com.vame.zulrah.overlays.ZulrahPrayerOverlay;
 import com.vame.zulrah.patterns.*;
 import com.vame.zulrah.phase.ZulrahPhase;
 import com.vame.zulrah.phase.ZulrahPrayerLookup;
+import com.vame.zulrah.phase.ZulrahType;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -109,6 +110,9 @@ public class ZulrahPlugin extends Plugin
 	private ExecutorService executor;
 
 	private ZulrahPhase prevPhase;
+
+	@Inject
+	private ZulrahConfig config;
 
 	@Override
 	protected void startUp()
@@ -192,36 +196,24 @@ public class ZulrahPlugin extends Plugin
 		}
 
 		if(!instance.getPhase().isJad()){
-			if(instance.getPhase().getPrayer() != null){
-				ArrayList<Prayer> prayers = ZulrahPrayerLookup.getPrayersFromZulrahType(instance.getPhase().getType(), client.getRealSkillLevel(Skill.PRAYER), this.client);
-				System.out.println(prayers.toString());
-				for (Prayer prayer : prayers){
-					int randomDelay = ThreadLocalRandom.current().nextInt(33, 164);
-					if(!isPrayerActive(prayer)){
-						this.executor.submit(() -> {
-							this.activatePrayer(prayer, randomDelay);
-						});
-					}
+			boolean ignoreProtection = false;
+			if(this.instance.getPhase().getPrayer() == null){
+				ignoreProtection = true;
+			}
+			List<Prayer> prayers = ZulrahPrayerLookup.getPrayersFromZulrahType(instance.getPhase().getType(), this.client, this.config, ignoreProtection);
+			this.activatePrayers(prayers);
+			if(ignoreProtection){
+				if(this.prevPhase == null){
+					this.prevPhase = this.instance.getPhase();
+				}
+				if(!prevPhase.equals(this.instance.getPhase())){
+					List<Prayer> noProtectPrayers = this.getActivePrayers().stream().filter(p -> p.name().startsWith("PROTECT_FROM")).collect(Collectors.toList());
+					this.executor.submit(() -> {
+						this.deactivatePrayers(noProtectPrayers);
+					});
+					this.prevPhase = this.instance.getPhase();
 				}
 			}
-			 //TODO: Find a way to only deactivate one per phase. Until then this is disabled.
-		 else{
-		 	if(this.prevPhase == null){
-		 		this.prevPhase = this.instance.getPhase();
-			}
-		 	if(!prevPhase.equals(this.instance.getPhase())){
-				List<Prayer> noProtectPrayers = this.getActivePrayers().stream().filter(p -> p.name().startsWith("PROTECT_FROM")).collect(Collectors.toList());
-				this.executor.submit(() -> {
-					this.deactivatePrayers(noProtectPrayers);
-				});
-				this.prevPhase = this.instance.getPhase();
-			}
-
-		 }
-
-
-
-
 		}
 
 		ZulrahPattern pattern = instance.getPattern();
@@ -266,6 +258,17 @@ public class ZulrahPlugin extends Plugin
 			}
 			else if(event.getProjectile().getId() == ZulrahProjectile.MAGE_PROJECTILE.getProjectileId()){
 				this.activatePrayer(Prayer.PROTECT_FROM_MAGIC, randomDelay);
+			}
+		}
+	}
+
+	private void activatePrayers(List<Prayer> prayersToActivate){
+		for (Prayer prayer : prayersToActivate){
+			int randomDelay = ThreadLocalRandom.current().nextInt(33, 164);
+			if(prayer != null && !isPrayerActive(prayer)){
+				this.executor.submit(() -> {
+					this.activatePrayer(prayer, randomDelay);
+				});
 			}
 		}
 	}

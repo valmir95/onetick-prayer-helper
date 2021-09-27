@@ -1,7 +1,9 @@
 package com.vame.zulrah.phase;
 
+import com.vame.zulrah.ZulrahConfig;
 import net.runelite.api.Client;
 import net.runelite.api.Prayer;
+import net.runelite.api.Skill;
 import net.runelite.api.Varbits;
 
 import java.util.ArrayList;
@@ -48,15 +50,28 @@ public enum ZulrahPrayerLookup {
         return this.varbitUnlocked;
     }
 
-    public static ArrayList<Prayer> getPrayersFromZulrahType(ZulrahType zulrahType, int prayerLevel, Client client){
+    public static ArrayList<Prayer> getPrayersFromZulrahType(ZulrahType zulrahType, Client client, ZulrahConfig config, boolean ignoreProtectionPrayer){
         ArrayList<Prayer> prayers = new ArrayList<>();
+        if(!ignoreProtectionPrayer){
+            Prayer protectionPrayer = ZulrahPrayerLookup.getProtectionPrayFromType(zulrahType);
+            if(protectionPrayer != null){
+                prayers.add(protectionPrayer);
+            }
+        }
         ZulrahPrayerLookup complementPray = null;
+
+        if(config.rangeOnly()){
+            zulrahType = ZulrahType.MAGIC;
+        }
+        else if(zulrahType == ZulrahType.MELEE){
+            zulrahType = ZulrahType.RANGE;
+        }
         for (ZulrahPrayerLookup zulrahPrayerLookup : ZulrahPrayerLookup.values()){
             if(!zulrahPrayerLookup.protectionPray && zulrahPrayerLookup.getZulrahType() == zulrahType){
                 if(complementPray == null){
                     complementPray = zulrahPrayerLookup;
                 }
-                else if(zulrahPrayerLookup.getRequiredLevel() > complementPray.getRequiredLevel() && zulrahPrayerLookup.getRequiredLevel() <= prayerLevel){
+                else if(zulrahPrayerLookup.getRequiredLevel() > complementPray.getRequiredLevel() && zulrahPrayerLookup.getRequiredLevel() <= client.getRealSkillLevel(Skill.PRAYER)){
                     if(zulrahPrayerLookup.getVarbitUnlocked() != null){
                         int unlockedVar = client.getVar(zulrahPrayerLookup.getVarbitUnlocked());
                         if(unlockedVar == 1){
@@ -69,7 +84,7 @@ public enum ZulrahPrayerLookup {
                 }
             }
         }
-        prayers.add(ZulrahPrayerLookup.getProtectionPrayFromType(zulrahType));
+
         prayers.add(complementPray.getPrayer());
 
         return prayers;

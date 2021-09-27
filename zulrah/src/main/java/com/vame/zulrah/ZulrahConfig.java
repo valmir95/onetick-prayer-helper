@@ -10,13 +10,25 @@ import java.awt.event.KeyEvent;
 @ConfigGroup("Zulrah")
 public interface ZulrahConfig extends Config {
     @ConfigItem(
-            keyName = "hotKey",
-            name = "Set hot key",
-            description = "Set the key to toggle on or off the flicker",
-            position = 0
+            keyName = "autoPray",
+            name = "Auto pray switch",
+            description = "Automatically switches prayers for you.",
+            position = 1
     )
-    default Keybind hotKey()
+    default boolean autoPray()
     {
-        return new Keybind(KeyEvent.VK_F2, 0);
+        return true;
+    }
+
+
+    @ConfigItem(
+            keyName = "rangeOnly",
+            name = "Range only mode",
+            description = "Sets the prayers to accommodate for range-only attacks",
+            position = 2
+    )
+    default boolean rangeOnly()
+    {
+        return false;
     }
 }
