@@ -3,17 +3,27 @@ package com.vame.onetickprayerhelper;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
+import net.runelite.api.*;
+import net.runelite.api.Point;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.events.WidgetLoaded;
+import net.runelite.api.vars.InterfaceTab;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetID;
+import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
-import net.runelite.api.Prayer;
+import net.runelite.client.plugins.banktags.tabs.TabInterface;
+import net.runelite.client.plugins.prayer.PrayerFlickLocation;
 import org.pf4j.Extension;
 
 import java.awt.*;
@@ -23,12 +33,15 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import net.runelite.rs.api.RSClient;
 
 @Extension
 @PluginDescriptor(
 	name = "One Tick Prayer",
 	description = "Helps with one tick prayer."
 )
+
+
 @Slf4j
 public class OneTickPrayerHelper extends Plugin implements KeyListener
 {
@@ -45,22 +58,28 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	{
 		return configManager.getConfig(OneTickPrayerHelperConfig.class);
 	}
-
 	@Getter
 	private boolean isClicking;
 	@Getter
 	private boolean lastClick;
+
+	@Getter
+	private MenuEntry menuEntry;
 
 	@Inject
 	private KeyManager keyManager;
 
 	private ScheduledExecutorService executor;
 
+	@Inject
+	private ClientThread clientThread;
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		keyManager.registerKeyListener(this);
 		executor = Executors.newSingleThreadScheduledExecutor();
+
 	}
 
 	@Override
@@ -92,14 +111,12 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 			this.lastClick = true;
 		}
 		else if(this.lastClick){
-			this.schedule(50);
+			this.executor.schedule(this::click, 50, TimeUnit.MILLISECONDS);
+
 			this.lastClick = false;
 		}
 	}
 
-	public void schedule(int delay){
-		this.executor.schedule(this::click, delay, TimeUnit.MILLISECONDS);
-	}
 
 	private void click(){
 		try{
@@ -112,10 +129,67 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	}
 
 
+	public void activatePrayer(Prayer prayer){
+		Widget prayerWidget = this.client.getWidget(prayer.getWidgetInfo());
+		clientThread.invoke(() ->
+				client.invokeMenuAction(
+						"Activate",
+						prayerWidget.getName(),
+						1,
+						MenuAction.CC_OP.getId(),
+						prayerWidget.getItemId(),
+						prayerWidget.getId()
+				)
+		);
+
+	}
+
+
+	@Subscribe
+	private void onMenuOptionClicked(MenuOptionClicked event) {
+		if (this.menuEntry != null) {
+			event.setMenuEntry(this.menuEntry);
+			this.menuEntry = null;
+		}
+	}
+
+	public void shadowClick() {
+		Point pos = client.getMouseCanvasPosition();
+		if (client.isStretchedEnabled()) {
+			final Dimension stretched = client.getStretchedDimensions();
+			final Dimension real = client.getRealDimensions();
+			final double width = (stretched.width / real.getWidth());
+			final double height = (stretched.height / real.getHeight());
+			final Point point = new Point((int)(pos.getX() * width), (int)(pos.getY() * height));
+			client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 501, System.currentTimeMillis(), 0, point.getX(), point.getY(), 1, false, 1));
+			client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 502, System.currentTimeMillis(), 0, point.getX(), point.getY(), 1, false, 1));
+			client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 500, System.currentTimeMillis(), 0, point.getX(), point.getY(), 1, false, 1));
+			return;
+		}
+		client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 501, System.currentTimeMillis(), 0, pos.getX(), pos.getY(), 1, false, 1));
+		client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 502, System.currentTimeMillis(), 0, pos.getX(), pos.getY(), 1, false, 1));
+		client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 500, System.currentTimeMillis(), 0, pos.getX(), pos.getY(), 1, false, 1));
+	}
+
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if(e.getKeyCode() == this.config.hotKey().getKeyCode()){
 			this.isClicking = !this.isClicking;
+		}
+
+		if(e.getKeyCode() == KeyEvent.VK_F11){
+			try{
+				//clickPrayer(Prayer.PROTECT_FROM_MISSILES);
+				//this.clientThread.invoke(() -> clickPrayer(Prayer.PROTECT_FROM_MISSILES));
+				//this.activatePrayer(Prayer.PROTECT_FROM_MISSILES);
+				Widget prayerWidget = this.client.getWidget(Prayer.PROTECT_FROM_MAGIC.getWidgetInfo());
+				this.menuEntry = new MenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
+				this.shadowClick();
+
+			}
+			catch (Exception ex){
+				ex.printStackTrace();
+			}
 		}
 	}
 

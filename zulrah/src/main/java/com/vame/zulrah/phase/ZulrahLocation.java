@@ -1,7 +1,6 @@
-import ProjectVersions.openosrsVersion
-
 /*
- * Copyright (c) 2019 Owain van Brakel <https://github.com/Owain94>
+ * Copyright (c) 2017, Aria <aria@ar1as.space>
+ * Copyright (c) 2017, Devin French <https://github.com/devinfrench>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,36 +23,40 @@ import ProjectVersions.openosrsVersion
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package com.vame.zulrah.phase;
 
-version = "1.0.2"
+import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.coords.LocalPoint;
 
-project.extra["PluginName"] = "Onetick prayer helper" // This is the name that is used in the external plugin manager panel
-project.extra["PluginDescription"] = "Helps with one-tick prayer" // This is the description that is used in the external plugin manager panel
+@Slf4j
+public enum ZulrahLocation
+{
+	NORTH, SOUTH, EAST, WEST;
 
-dependencies {
-    annotationProcessor(Libraries.lombok)
-    annotationProcessor(Libraries.pf4j)
-
-    compileOnly("com.openosrs:runelite-api:$openosrsVersion+")
-    compileOnly("com.openosrs:runelite-client:$openosrsVersion+")
-    compileOnly("com.openosrs.rs:runescape-api:$openosrsVersion+")
-
-    compileOnly(Libraries.guice)
-    compileOnly(Libraries.javax)
-    compileOnly(Libraries.lombok)
-    compileOnly(Libraries.pf4j)
-}
-
-tasks {
-    jar {
-        manifest {
-            attributes(mapOf(
-                    "Plugin-Version" to project.version,
-                    "Plugin-Id" to nameToId(project.extra["PluginName"] as String),
-                    "Plugin-Provider" to project.extra["PluginProvider"],
-                    "Plugin-Description" to project.extra["PluginDescription"],
-                    "Plugin-License" to project.extra["PluginLicense"]
-            ))
-        }
-    }
+	public static ZulrahLocation valueOf(LocalPoint start, LocalPoint current)
+	{
+		int dx = start.getX() - current.getX();
+		int dy = start.getY() - current.getY();
+		if (dx == -10 * 128 && dy == 2 * 128)
+		{
+			return ZulrahLocation.EAST;
+		}
+		else if (dx == 10 * 128 && dy == 2 * 128)
+		{
+			return ZulrahLocation.WEST;
+		}
+		else if (dx == 0 && dy == 11 * 128)
+		{
+			return ZulrahLocation.SOUTH;
+		}
+		else if (dx == 0 && dy == 0)
+		{
+			return ZulrahLocation.NORTH;
+		}
+		else
+		{
+			log.debug("Unknown Zulrah location dx: {}, dy: {}", dx, dy);
+			return null;
+		}
+	}
 }

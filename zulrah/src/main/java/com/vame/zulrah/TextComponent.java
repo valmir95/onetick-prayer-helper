@@ -1,7 +1,7 @@
-import ProjectVersions.openosrsVersion
-
-/*
- * Copyright (c) 2019 Owain van Brakel <https://github.com/Owain94>
+package com.vame.zulrah;/*
+ * Copyright (c) 2017, Aria <aria@ar1as.space>
+ * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2017, Devin French <https://github.com/devinfrench>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,35 +25,35 @@ import ProjectVersions.openosrsVersion
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-version = "1.0.2"
+import lombok.AccessLevel;
+import lombok.Setter;
+import net.runelite.client.ui.overlay.RenderableEntity;
 
-project.extra["PluginName"] = "Onetick prayer helper" // This is the name that is used in the external plugin manager panel
-project.extra["PluginDescription"] = "Helps with one-tick prayer" // This is the description that is used in the external plugin manager panel
+import java.awt.*;
 
-dependencies {
-    annotationProcessor(Libraries.lombok)
-    annotationProcessor(Libraries.pf4j)
+public class TextComponent implements RenderableEntity
+{
+	@Setter(AccessLevel.PACKAGE)
+	private String text;
 
-    compileOnly("com.openosrs:runelite-api:$openosrsVersion+")
-    compileOnly("com.openosrs:runelite-client:$openosrsVersion+")
-    compileOnly("com.openosrs.rs:runescape-api:$openosrsVersion+")
+	@Setter(AccessLevel.PACKAGE)
+	private Point position = new Point();
 
-    compileOnly(Libraries.guice)
-    compileOnly(Libraries.javax)
-    compileOnly(Libraries.lombok)
-    compileOnly(Libraries.pf4j)
-}
+	@Setter(AccessLevel.PACKAGE)
+	private Color color = Color.WHITE;
 
-tasks {
-    jar {
-        manifest {
-            attributes(mapOf(
-                    "Plugin-Version" to project.version,
-                    "Plugin-Id" to nameToId(project.extra["PluginName"] as String),
-                    "Plugin-Provider" to project.extra["PluginProvider"],
-                    "Plugin-Description" to project.extra["PluginDescription"],
-                    "Plugin-License" to project.extra["PluginLicense"]
-            ))
-        }
-    }
+	@Override
+	public Dimension render(Graphics2D graphics)
+	{
+		// Draw shadow
+		graphics.setColor(Color.BLACK);
+		graphics.drawString(text, position.x + 1, position.y + 1);
+
+		// Draw actual text
+		graphics.setColor(color);
+		graphics.drawString(text, position.x, position.y);
+
+		final FontMetrics fontMetrics = graphics.getFontMetrics();
+		return new Dimension(fontMetrics.stringWidth(text), fontMetrics.getHeight());
+	}
 }

@@ -23,9 +23,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = "onetick prayer helper"
+rootProject.name = "vame plugin repository"
 
 include(":onetickprayerhelper")
+include(":drakehelper")
+include(":zulrah")
 
 for (project in rootProject.children) {
     project.apply {
