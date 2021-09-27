@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Point;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
+import net.runelite.api.queries.NPCQuery;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -195,7 +196,7 @@ public class ZulrahPlugin extends Plugin
 			log.debug("Zulrah phase has moved from {} -> {}, stage: {}", previousPhase, currentPhase, instance.getStage());
 		}
 
-		if(!instance.getPhase().isJad()){
+		if(!instance.getPhase().isJad() && this.client.getBoostedSkillLevel(Skill.PRAYER) > 0){
 			boolean ignoreProtection = false;
 			if(this.instance.getPhase().getPrayer() == null){
 				ignoreProtection = true;
@@ -244,6 +245,16 @@ public class ZulrahPlugin extends Plugin
 			log.debug("Zulrah pattern has reset.");
 
 			instance.reset();
+		}
+	}
+
+
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged gameStateChanged)
+	{
+		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN)
+		{
+			this.zulrah = null;
 		}
 	}
 
