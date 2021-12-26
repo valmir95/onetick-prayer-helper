@@ -129,31 +129,6 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	}
 
 
-	public void activatePrayer(Prayer prayer){
-		Widget prayerWidget = this.client.getWidget(prayer.getWidgetInfo());
-		clientThread.invoke(() ->
-				client.invokeMenuAction(
-						"Activate",
-						prayerWidget.getName(),
-						1,
-						MenuAction.CC_OP.getId(),
-						prayerWidget.getItemId(),
-						prayerWidget.getId()
-				)
-		);
-
-	}
-
-
-	@Subscribe
-	private void onMenuOptionClicked(MenuOptionClicked event) {
-		if (this.menuEntry != null) {
-			Widget prayerWidget = this.client.getWidget(Prayer.PROTECT_FROM_MAGIC.getWidgetInfo());
-			event.setMenuEntry(this.client.createMenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false));
-			this.menuEntry = null;
-		}
-	}
-
 	public void shadowClick() {
 		Point pos = client.getMouseCanvasPosition();
 		if (client.isStretchedEnabled()) {
@@ -177,21 +152,6 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 		if(e.getKeyCode() == this.config.hotKey().getKeyCode()){
 			this.isClicking = !this.isClicking;
 		}
-
-		if(e.getKeyCode() == KeyEvent.VK_F7){
-			try{
-				//clickPrayer(Prayer.PROTECT_FROM_MISSILES);
-				//this.clientThread.invoke(() -> clickPrayer(Prayer.PROTECT_FROM_MISSILES));
-				//this.activatePrayer(Prayer.PROTECT_FROM_MISSILES);
-				Widget prayerWidget = this.client.getWidget(Prayer.PROTECT_FROM_MAGIC.getWidgetInfo());
-				this.menuEntry = this.client.createMenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
-				this.shadowClick();
-
-			}
-			catch (Exception ex){
-				ex.printStackTrace();
-			}
-		}
 	}
 
 	@Override
@@ -211,20 +171,7 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	}
 
 	public int randInt(int min, int max) {
-
-		// NOTE: This will (intentionally) not run as written so that folks
-		// copy-pasting have to think about how to initialize their
-		// Random instance.  Initialization of the Random instance is outside
-		// the main scope of the question, but some decent options are to have
-		// a field that is initialized once and then re-used as needed or to
-		// use ThreadLocalRandom (if using at least Java 1.7).
-		//
-		// In particular, do NOT do 'Random rand = new Random()' here or you
-		// will get not very good / not very random results.
 		Random rand = new Random();
-
-		// nextInt is normally exclusive of the top value,
-		// so add 1 to make it inclusive
 		return rand.nextInt((max - min) + 1) + min;
 	}
 }
