@@ -25,7 +25,7 @@ import ProjectVersions.openosrsVersion
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-version = "1.0.2"
+version = "1.0.4"
 
 project.extra["PluginName"] = "Onetick prayer helper" // This is the name that is used in the external plugin manager panel
 project.extra["PluginDescription"] = "Helps with one-tick prayer" // This is the description that is used in the external plugin manager panel

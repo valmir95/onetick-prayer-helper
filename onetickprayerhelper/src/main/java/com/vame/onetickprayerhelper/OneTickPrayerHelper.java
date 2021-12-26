@@ -177,13 +177,13 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 			this.isClicking = !this.isClicking;
 		}
 
-		if(e.getKeyCode() == KeyEvent.VK_F11){
+		if(e.getKeyCode() == KeyEvent.VK_F7){
 			try{
 				//clickPrayer(Prayer.PROTECT_FROM_MISSILES);
 				//this.clientThread.invoke(() -> clickPrayer(Prayer.PROTECT_FROM_MISSILES));
 				//this.activatePrayer(Prayer.PROTECT_FROM_MISSILES);
 				Widget prayerWidget = this.client.getWidget(Prayer.PROTECT_FROM_MAGIC.getWidgetInfo());
-				this.menuEntry = new MenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
+				this.menuEntry = this.client.createMenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
 				this.shadowClick();
 
 			}

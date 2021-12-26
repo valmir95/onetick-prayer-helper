@@ -196,9 +196,10 @@ public class ZulrahPlugin extends Plugin
 			log.debug("Zulrah phase has moved from {} -> {}, stage: {}", previousPhase, currentPhase, instance.getStage());
 		}
 
-		if(!instance.getPhase().isJad() && this.client.getBoostedSkillLevel(Skill.PRAYER) > 0){
+		if(this.client.getBoostedSkillLevel(Skill.PRAYER) > 0){
+			boolean isJad = this.instance.getPattern() != null && this.instance.getPattern().getJadIndex() == this.instance.getStage();
 			boolean ignoreProtection = false;
-			if(this.instance.getPhase().getPrayer() == null){
+			if(this.instance.getPhase().getPrayer() == null || isJad){
 				ignoreProtection = true;
 			}
 			List<Prayer> prayers = ZulrahPrayerLookup.getPrayersFromZulrahType(instance.getPhase().getType(), this.client, this.config, ignoreProtection);
@@ -262,7 +263,12 @@ public class ZulrahPlugin extends Plugin
 
 	@Subscribe
 	public void onProjectileMoved(ProjectileMoved event) {
-		if(this.instance != null && this.instance.getPhase() != null && this.instance.getPhase().isJad()){
+		if(this.instance == null){
+			return;
+		}
+		boolean isJad = this.instance.getPattern() != null && this.instance.getPattern().getJadIndex() == this.instance.getStage();
+
+		if(isJad){
 			int randomDelay = ThreadLocalRandom.current().nextInt(23, 133);
 			if(event.getProjectile().getId() == ZulrahProjectile.RANGED_PROJECTILE.getProjectileId()){
 				this.activatePrayer(Prayer.PROTECT_FROM_MISSILES, randomDelay);
@@ -339,12 +345,12 @@ public class ZulrahPlugin extends Plugin
 
 	private MenuEntry getActivatePrayerMenuEntry(Prayer prayer){
 		Widget prayerWidget = this.client.getWidget(prayer.getWidgetInfo());
-		return new MenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
+		return this.client.createMenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
 	}
 
 	private MenuEntry getDeactivatePrayerMenuEntry(Prayer prayer){
 		Widget prayerWidget = this.client.getWidget(prayer.getWidgetInfo());
-		return new MenuEntry("Deactivate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
+		return this.client.createMenuEntry("Deactivate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
 	}
 
 

@@ -66,6 +66,17 @@ public abstract class ZulrahPattern
 		return pattern.get(index);
 	}
 
+	public int getJadIndex(){
+		int counter = 0;
+		for (ZulrahPhase phase : this.pattern){
+			if(phase.isJad()){
+				return counter;
+			}
+			counter++;
+		}
+		return -1;
+	}
+
 	public boolean stageMatches(int index, ZulrahPhase instance)
 	{
 		ZulrahPhase patternInstance = get(index);
