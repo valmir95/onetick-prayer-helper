@@ -148,7 +148,8 @@ public class OneTickPrayerHelper extends Plugin implements KeyListener
 	@Subscribe
 	private void onMenuOptionClicked(MenuOptionClicked event) {
 		if (this.menuEntry != null) {
-			event.setMenuEntry(this.menuEntry);
+			Widget prayerWidget = this.client.getWidget(Prayer.PROTECT_FROM_MAGIC.getWidgetInfo());
+			event.setMenuEntry(this.client.createMenuEntry("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false));
 			this.menuEntry = null;
 		}
 	}
