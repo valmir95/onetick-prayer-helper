@@ -101,7 +101,7 @@ public class ZulrahPlugin extends Plugin
 	private ZulrahOverlay zulrahOverlay;
 
 	@Getter
-	private MenuEntry menuEntry;
+	private MenuEntryValues menuEntryValues;
 
 	@Getter
 	private Prayer prevPrayer;
@@ -138,9 +138,17 @@ public class ZulrahPlugin extends Plugin
 
 	@Subscribe
 	private void onMenuOptionClicked(MenuOptionClicked event) {
-		if (this.menuEntry != null) {
-			event.setMenuEntry(this.menuEntry);
-			this.menuEntry = null;
+		if (this.menuEntryValues != null) {
+			event.setMenuEntry(this.client.createMenuEntry(
+					this.menuEntryValues.getOption(),
+					this.menuEntryValues.getTarget(),
+					this.menuEntryValues.getIdentifier(),
+					this.menuEntryValues.getOpcode(),
+					this.menuEntryValues.getParam1(),
+					this.menuEntryValues.getParam2(),
+					this.menuEntryValues.isForceLeftClick()
+			));
+			this.menuEntryValues = null;
 		}
 	}
 
@@ -292,7 +300,8 @@ public class ZulrahPlugin extends Plugin
 
 	private void activatePrayer(Prayer prayer, int msSleepTime){
 		try{
-			this.menuEntry = this.getActivatePrayerMenuEntry(prayer);
+			Widget prayerWidget = this.client.getWidget(prayer.getWidgetInfo());
+			this.menuEntryValues = new MenuEntryValues("Activate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
 			this.shadowClick();
 			Thread.sleep(msSleepTime);
 		}catch (Exception ex){
@@ -309,7 +318,8 @@ public class ZulrahPlugin extends Plugin
 
 	private void deactivatePrayer(Prayer prayer, int msSleepTime){
 		try{
-			this.menuEntry = this.getDeactivatePrayerMenuEntry(prayer);
+			Widget prayerWidget = this.client.getWidget(prayer.getWidgetInfo());
+			this.menuEntryValues = new MenuEntryValues("Deactivate", prayerWidget.getName(), 1, MenuAction.CC_OP.getId(), prayerWidget.getItemId(), prayerWidget.getId(), false);
 			this.shadowClick();
 			Thread.sleep(msSleepTime);
 		}catch (Exception ex){
