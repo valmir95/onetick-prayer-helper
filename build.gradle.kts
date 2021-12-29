@@ -54,5 +54,9 @@ subprojects {
             dirMode = 493
             fileMode = 420
         }
+        register<Copy>("copyDeps") {
+            into("./build/deps/")
+            from(configurations["runtimeClasspath"])
+        }
     }
 }
